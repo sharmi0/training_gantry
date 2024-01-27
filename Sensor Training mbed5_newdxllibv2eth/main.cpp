@@ -59,6 +59,7 @@ Timer msg_timer;
 
 bool state_change = false;
 bool servo_on = false;
+int* dxl_commands; //x, y, z, theta, phi
 
 RawSerial uart(PF_7, PF_6);
 DigitalInOut RTS(PF_9);
@@ -67,17 +68,15 @@ uint8_t dxl_ID[] =  {1, 2};
 uint8_t idLength = sizeof(dxl_ID) / sizeof(dxl_ID[0]);
 
 // Debugging LEDs
-// DigitalOut led_pwr(LED1);
-// DigitalOut led_mot(LED2);
-// DigitalOut led_com(LED3);
+DigitalOut led_pwr(LED1);
+DigitalOut led_mot(LED2);
+DigitalOut led_com(LED3);
 
 // Initialize serial port
 RawSerial pc(USBTX, USBRX, 115200);
 Timer t;
 int loop_time;
 int servo_time;
-int* dxl_commands; //x, y, z, theta, phi
-
 double dt = 0.002; //2ms
 uint32_t time_step = 0;
 Ticker motor_cmd;
@@ -158,36 +157,7 @@ int* charToIntArray(char buf[]) {
 int main() {
 
     //Set up Ethernet
-   
-
-    wait_us(10000);
-    for (int i=0; i<idLength; i++) {
-        dxl_bus.SetTorqueEn(dxl_ID[i],0x00);
-        dxl_bus.SetRetDelTime(dxl_ID[i],0x05); // 4us delay time?
-        dxl_bus.SetControlMode(dxl_ID[i], POSITION_CONTROL);
-        wait_ms(100);
-        dxl_bus.TurnOnLED(dxl_ID[i], 0x01);
-        //dxl_bus.TurnOnLED(dxl_ID[i], 0x00); // turn off LED
-        dxl_bus.SetTorqueEn(dxl_ID[i],0x01); //to be able to move 
-        wait_ms(100);
-        }
-    for (int i=0; i<idLength; i++) {
-        dxl_bus.SetVelocityProfile(dxl_ID[i], 0); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
-        dxl_bus.SetAccelerationProfile(dxl_ID[i], 0); // 80(17166) rev/min^2
-        }
-
-    dxl_bus.SetMultGoalPositions(dxl_ID, idLength, multiHomePos);
-  
-    wait_ms(2000);
-
-
-    dxl_bus.SetMultGoalPositions(dxl_ID, idLength, rtPos);
-    wait_ms(2000);
-    dxl_bus.GetMultPositions(dxl_position, dxl_ID, idLength);
-    pc.printf("%d, %d\n\r",dxl_position[0],dxl_position[1]);
-
-
-     eth.set_network(ip_1, mask, gateway);
+    eth.set_network(ip_1, mask, gateway);
     eth.connect();
  
 
@@ -196,19 +166,44 @@ int main() {
     client.set_ip_address(SERVER_ADDRESS);
     local.set_port(LOCAL_PORT);
     local.set_ip_address(ip);
-
-    // wait_us(10000);
     
     code = server.open(&eth);
-    // pc.printf("opening server code = %d\n\r",code);
+    pc.printf("opening server code = %d\n\r",code);
 
     if(code!=0) { pc.printf("Error from opening server = %d\n\r",code); }    
     code = server.bind(local);
     if(code!=0) { pc.printf("Error from binding socket = %d\n\r",code); }
 
-    // eth_send.attach_us(&send_eth_data,10000); // 100Hz
+    eth_send.attach_us(&send_eth_data,10000); // 100Hz
+
+    // wait_us(10000);
+    // for (int i=0; i<idLength; i++) {
+    //     dxl_bus.SetTorqueEn(dxl_ID[i],0x00);
+    //     dxl_bus.SetRetDelTime(dxl_ID[i],0x05); // 4us delay time?
+    //     dxl_bus.SetControlMode(dxl_ID[i], POSITION_CONTROL);
+    //     wait_ms(100);
+    //     dxl_bus.TurnOnLED(dxl_ID[i], 0x01);
+    //     //dxl_bus.TurnOnLED(dxl_ID[i], 0x00); // turn off LED
+    //     dxl_bus.SetTorqueEn(dxl_ID[i],0x01); //to be able to move 
+    //     wait_ms(100);
+    //     }
+    // for (int i=0; i<idLength; i++) {
+    //     dxl_bus.SetVelocityProfile(dxl_ID[i], 0); // 414(94.81RPM) @ 14.8V, 330(75.57RPM) @ 12V
+    //     dxl_bus.SetAccelerationProfile(dxl_ID[i], 0); // 80(17166) rev/min^2
+    //     }
+
+    // dxl_bus.SetMultGoalPositions(dxl_ID, idLength, multiHomePos);
+  
+    // wait_ms(2000);
+
+
+    // dxl_bus.SetMultGoalPositions(dxl_ID, idLength, rtPos);
+    // wait_ms(2000);
+    // dxl_bus.GetMultPositions(dxl_position, dxl_ID, idLength);
+    // pc.printf("%d, %d\n\r",dxl_position[0],dxl_position[1]);
 
     printf("Beginning to sample.\n\r");    
+
 
    while (true) {
         
@@ -224,10 +219,7 @@ int main() {
 
      
             if (recv_buf[0]=='r') {
-                
-                dxl_bus.GetMultPositions(dxl_position, dxl_ID, 2); 
-                printf("returned position 1: %i\n\r", dxl_position[0]);
-                // printf("returned position 2: %i\n\r", dxl_position[1]);
+
                 sprintf(send_buf, "1.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0\n");
                 server.sendto(client, send_buf, sizeof(send_buf)); // send message, look for '\n' character when decoding the string
             } 
@@ -251,22 +243,6 @@ int main() {
         }
 
     }
-    // motor_cmd.attach_us(&motorCommand,2000);
-    // t.reset();
-    // t.start();
-    // while (true) {
-
-    //  if (motor_cmd_flag){
-    //         motor_cmd_flag = 0;
-    //     dxl_bus.SetMultGoalPositions(dxl_ID, idLength, rtPos);
-    //     dxl_bus.GetMultPositions(dxl_position, dxl_ID, idLength);
-    //     pc.printf("%d, %d\n\r",dxl_position[0],dxl_position[1]);
-    //     }
-    // }
-    // t.stop();
-    // dxl_time = t.read_ms();
 
 
 }
-
-

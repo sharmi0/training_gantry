@@ -297,10 +297,6 @@ void XM430_bus::GetManyThings32(uint32_t* ret_vals, uint16_t address, uint8_t id
 
     sendIPacket();
     getRPacket();
-
-    for (int k =0; k<rPacketLength; k++){
-        printf("rpack %u\r\n", rPacket[k]);
-    }
     
     // for loop to extract ret_vals from rPacket
     int i = 10;
