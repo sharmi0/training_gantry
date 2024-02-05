@@ -21,7 +21,7 @@ using namespace std;
 const int SERVER_PORT = 11223; 
 const char* SERVER_ADDRESS = "192.168.1.200";    //This is the address of the PC
 const int LOCAL_PORT = 11223;
-const char* ip = "192.168.1.1";     //This is the ip of the mbed board
+const char* ip = "192.168.1.1";     //This is the ipo f the mbed board
 SocketAddress ip_1 = "192.168.1.1";     //This is the ip of the mbed board
 SocketAddress mask = "255.255.255.0"; 
 SocketAddress gateway = "192.168.1.10";
@@ -31,7 +31,7 @@ SocketAddress client; // client address (address of PC))
 UDPSocket server; // UDP socket (peripheral on this board)
 
 // Messages to fill and send over ethernet
-// buffer length is 6*6 + 11*8 + 14 = 138   *****not important but is 6 and 11 amount of space needed for each ati and pressure sensor reading. what is 14 for
+// buffer length is 6*6 + 11*8 + 14 = 138
 char send_buf[138];
 char ok_response_buf[10];
 char recv_buf[256];
@@ -63,6 +63,8 @@ bool servo_on = false;
 RawSerial uart(PF_7, PF_6);
 DigitalInOut RTS(PF_9);
 
+
+
 uint8_t dxl_ID[] =  {1, 2};
 uint8_t idLength = sizeof(dxl_ID) / sizeof(dxl_ID[0]);
 
@@ -83,18 +85,10 @@ uint32_t time_step = 0;
 Ticker motor_cmd;
 int8_t motor_cmd_flag = 0;
 int32_t dxl_time;
+
 // Initial Positions
 
 uint32_t multiHomePos[2] = {2048, 2048};
-uint32_t goalPos1[2] = {2048, 2048};
-uint32_t goalPos2[2] = {2048, 2048};
-uint32_t goalPos3[2] = {2048, 2048};
-uint32_t goalPos4[2] = {2048, 2048};
-uint32_t goalPos5[2] = {2048, 2048};
-uint32_t goalPos6[2] = {2048, 2048};
-uint32_t goalPos7[2] = {2048, 2048};
-uint32_t goalPos8[2] = {2048, 2048};
-
 uint32_t rtPos[2] = {0,0};
 
 float pulse_to_rad = (2.0f*PI)/4096.0f; // = 0.001534
@@ -110,11 +104,7 @@ double desired_current[2];
 uint16_t current_command[2];
 
 XM430_bus dxl_bus(2000000, PF_7, PF_6, PF_9); // baud, tx, rx, rts
-float freq1 = 0.75; //9.5
-float freq2 = freq1/2.0f;
-float amp1 = (PI/180)*65;
-float amp2 = (PI/180)*35;
-float amp3 = (PI/180)*15;
+
 
 //Unpack Ethernet Commands
 int* charToIntArray(char buf[]) {
@@ -157,9 +147,6 @@ int* charToIntArray(char buf[]) {
 
 int main() {
 
-    //Set up Ethernet
-   
-
     wait_us(10000);
     for (int i=0; i<idLength; i++) {
         dxl_bus.SetTorqueEn(dxl_ID[i],0x00);
@@ -177,17 +164,14 @@ int main() {
         }
 
     dxl_bus.SetMultGoalPositions(dxl_ID, idLength, multiHomePos);
-  
     wait_ms(2000);
-
-
     dxl_bus.SetMultGoalPositions(dxl_ID, idLength, rtPos);
     wait_ms(2000);
     dxl_bus.GetMultPositions(dxl_position, dxl_ID, idLength);
     pc.printf("%d, %d\n\r",dxl_position[0],dxl_position[1]);
 
-
-     eth.set_network(ip_1, mask, gateway);
+//     //Set up Ethernet
+    eth.set_network(ip_1, mask, gateway);
     eth.connect();
  
 
@@ -214,6 +198,9 @@ int main() {
         
         n = server.recvfrom(&client, recv_buf, 256); 
    
+
+     
+        
         
         if (n > 0) {
             // Null-terminate the received data
