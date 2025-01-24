@@ -28,7 +28,7 @@ void send_eth_data(){
 
 /*---------------------- Ethernet setup ----------------------*/
 const int SERVER_PORT = 11223;
-const char* SERVER_ADDRESS = "192.168.1.200";    // Adress of the other Mbed (Mbed B) ... this is pc
+const char* SERVER_ADDRESS = "192.168.1.200";    // Adress of the other Mbed (Mbed B)
 const int LOCAL_PORT = 11223;
 const char* ip = "192.168.1.1";     // Mbed A = 1; Mbed B = 2
 const char* mask = "255.255.255.0";
