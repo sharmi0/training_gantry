@@ -82,15 +82,8 @@ void unpack_reply(CANMessage msg){
         tof_1[2] = msg.data[2];
         tof_1[3] = msg.data[3];
         tof_1[4] = msg.data[4];
-        tof_1[5] = msg.data[5];
-        tof_1[6] = msg.data[6];
-        tof_1[7] = msg.data[7];
     }
 }
-
-/*---------------------- IMU setup ----------------------*/
-// TODO: add this so that we can collect hand-held data
-
 
 
 /*---------------------- LTC chip setup ----------------------*/
@@ -381,128 +374,6 @@ void read_bmp_data(){
     bmp3_get_sensor_data(sensor_comp, &sn_data8, &s8);
 }
 
-
-/*---------------------- Neural Network Evaluation ----------------------*/
-
-// TODO: add this to test fingertip sensor
-/*
-// sensor data
-uint16_t sense_data_raw[8];
-float sense_data_decode[5];
-
-// internal layers to be evaluated on-line
-float l1[12];
-float l2[25];
-
-// weights and biases for NN (constant)...add more digits here to improve prediction accuracy?
-const float b1[12] = {};
-const float b2[25] = {};
-const float b3[5] =  {};
-const float w1[8][12] = { { }, { }, { }, { }, { }, { }, { }, { } };
-const float w2[12][25] = {{ }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { } };                         
-const float w3[25][5] = { { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { },
-                          { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { }, { } };
-
-// values for scaling sensor readings and NN outputs
-const float minims[] = { -79.14952894807573f, -59.34503867427718f, -190.91288f,  -0.7863755477785648f, -0.7863755477785648f, -831.0f, -997.0f, -974.0f, -986.0f, -998.0f, -964.0f, -136.0f, -881.0f};
-const float maxims[] = { 145.75214841512442f, 147.80758667427716f,  194.5331016f, 1.5781267096532723f,  1.5765908199115173f, 4079.0f, 3156.0f, 3734.0f, 4001.0f, 3463.0f, 3463.0f, 2621.0f, 3370.0f};
-const float maxS = 4079.0;
-float in_vec[8];
-float out_vec[5];
-int out_vec_pr[5];
-uint16_t offsets[8];
-
-// sensor workflow from before
-//// get sensor data
-//readSensor(sense_data_raw);
-//
-//// scale sensor data
-//for (int i=0; i<8; i++){
-//    in_vec[i] = 0.0f;
-//    in_vec[i] = (((float)(sense_data_raw[i]-offsets[i])) + abs(minims[i+5])) / maxS;
-//}
-//
-//// evaluate NN
-//decodeSensor(in_vec,sense_data_decode); 
-//
-//// post-process, re-scale decoded data
-//for (int i=0; i<5; i++) {
-//    out_vec[i] = 0.0f;
-//    out_vec[i] = (sense_data_decode[i]*maxims[i]) - abs(minims[i]);
-//    out_vec_pr[i] = (int)(out_vec[i]*100.0f);
-//}    
-
-
-void calibrateSensor(uint16_t* offsets){ // not sure if this is still necessary?
-    // calculate sensor offsets
-    float temp_offsets[8] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-    int samps = 10;
-    for (int i=0; i<samps; i++){
-        for (int j=0; j<8; j++){
-            temp_offsets[j] += (float)spi3.binary(j);
-        }
-        wait_ms(1);
-    }
-    for (int i=0; i<8; i++){
-        temp_offsets[i] = temp_offsets[i]/((float)samps); // get overall offset
-        offsets[i] = (uint16_t)temp_offsets[i]; // convert to int
-    }
-}
-
-void decodeSensor(float input[8], float* output) {    
-    // decode sensor data here....521*4 operations (multiply,add,activation,add)
-    
-    // TODO: do normalization here? would need to change input[8] to raw sensor data for function input
-    
-    
-    // reset values
-    for (int i = 0; i<12; i++){
-        l1[i] = 0.0f;
-    }
-    for (int i = 0; i<25; i++){
-        l2[i] = 0.0f;
-    }
-    for (int i = 0; i<5; i++){
-        output[i] = 0.0f;
-    }
-        
-    // layer 1
-    for(int i = 0; i<12; i++){ // for each node in the next layer
-        for(int j = 0; j<8; j++){ // add contribution of node in prev. layer
-            l1[i] +=  (w1[j][i]*input[j]); 
-        }
-        l1[i] += b1[i]; // add bias
-        l1[i] = fmaxf(0.0f, l1[i]); // relu activation
-    }
-        
-    // layer 2
-    for(int i = 0; i<25; i++){ // for each node in the next layer
-        for(int j = 0; j<12; j++){ // add contribution of node in prev. layer
-            l2[i] += (w2[j][i]*l1[j]);
-        }
-        l2[i] += b2[i]; // add bias
-        if (l2[i]<0.0f) { // elu activation
-            l2[i] = exp(l2[i]) - 1.0f; // alpha implicitly set to 1.0 here
-        }
-    }   
-    
-    // layer 3
-    for(int i = 0; i<5; i++){ // for each node in the next layer
-        for(int j = 0; j<25; j++){ // add contribution of node in prev. layer
-            output[i] += w3[j][i]*l2[j];
-            
-        }
-        output[i] += b3[i];// add bias
-        output[i] = 1.0f/(1.0f + exp(-output[i])); // sigmoid activation 
-    }  
-    
-    // TODO: undo normalization here
-    
-    }
-*/
-
-
-
 /*---------------------- Main function ----------------------*/
 int main()
 {
@@ -583,45 +454,6 @@ int main()
     
     while (true) {
         
-        /*if(LTC_ticker_activated == true) {
-            // Clear flag
-            LTC_ticker_activated = false;
-            // Sample from LTC chip, filter data
-            read_LTC_data();
-            filter_LTC_data();
-        }   
-        
-        if(eth_ticker_activated == true) { 
-            // Clear flag
-            eth_ticker_activated = false;
-            
-            convert_LTC_data(); // TODO: maybe remove this eventually, if we convert the data after sending over ethernet
-            // Print received data
-            //pc.printf("%6d,%6d,%6d,%6d,%6d,%6d\n\r", ati_data[0],ati_data[1],ati_data[2],ati_data[3],ati_data[4],ati_data[5]);
-            // Print converted LTC data
-//            pc.printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,  ", ft_data[0],ft_data[1],ft_data[2],ft_data[3],ft_data[4],ft_data[5]);
-            
-            // Sample from force sensor
-            read_bmp_data();
-            // Convert to relative pressures
-            pr_data[0] = int(sn_data1.pressure)-100000; // pressure is returned in Pa, could subtract actual sea level pressure here
-            pr_data[1] = int(sn_data2.pressure)-100000;
-            pr_data[2] = int(sn_data3.pressure)-100000;
-            pr_data[3] = int(sn_data4.pressure)-100000;
-            pr_data[4] = int(sn_data5.pressure)-100000;
-            pr_data[5] = int(sn_data6.pressure)-100000;
-            pr_data[6] = int(sn_data7.pressure)-100000;
-            pr_data[7] = int(sn_data8.pressure)-100000;
-            // Print received data
-//            pc.printf("%d,%d,%d,%d,%d,%d,%d,%d\n\r", pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7]);      
-            
-            // Pack and send the ethernet message
-            //sprintf(send_buf, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%d,%d\n", msg_timer.read(),ft_data[0],ft_data[1],ft_data[2], pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7]);       
-//            sprintf(send_buf, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", ati_data[0],ati_data[1],ati_data[2],ati_data[3],ati_data[4],ati_data[5], pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7]);       
-            //server.sendto(client, send_buf, sizeof(send_buf)); // send message, look for '\n' character when decoding the string
-            
-         }*/
-         
          // Receive a message from server (Mbed B)
         char buf[256];
         int n = server.recvfrom(&client, buf, 256); // could also use server.recv(buf, 256)?
@@ -643,16 +475,8 @@ int main()
             read_LTC_data();
             filter_LTC_data();
             convert_LTC_data();
-            //read_bmp_data();
-//            pr_data[0] = int(sn_data1.pressure)-100000; // pressure is returned in Pa, could subtract actual sea level pressure here
-//            pr_data[1] = int(sn_data2.pressure)-100000;
-//            pr_data[2] = int(sn_data3.pressure)-100000;
-//            pr_data[3] = int(sn_data4.pressure)-100000;
-//            pr_data[4] = int(sn_data5.pressure)-100000;
-//            pr_data[5] = int(sn_data6.pressure)-100000;
-//            pr_data[6] = int(sn_data7.pressure)-100000;
-//            pr_data[7] = int(sn_data8.pressure)-100000; 
-            pr_data[0] = pressure_raw[0]; // pressure is returned in Pa, could subtract actual sea level pressure here
+
+            pr_data[0] = pressure_raw[0]; // pressure is returned in Pa
             pr_data[1] = pressure_raw[1];
             pr_data[2] = pressure_raw[2];
             pr_data[3] = pressure_raw[3];
@@ -660,7 +484,7 @@ int main()
             pr_data[5] = pressure_raw[5];
             pr_data[6] = pressure_raw[6];
             pr_data[7] = pressure_raw[7];      
-            sprintf(send_buf, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%d,%d, %d, %d, %d, %d\n", msg_timer.read(),ft_data[0],ft_data[1],ft_data[2], pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7], tof_1[0], tof_1[1], tof_1[2], tof_1[3], tof_1[4], tof_1[5], tof_1[6], tof_1[7]);       
+            sprintf(send_buf, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", msg_timer.read(),ft_data[0],ft_data[1],ft_data[2], pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7], tof_1[0], tof_1[1], tof_1[2], tof_1[3], tof_1[4]);       
             server.sendto(client, send_buf, sizeof(send_buf)); // send message, look for '\n' character when decoding the string
         }
         can.read(rxMsg1);
