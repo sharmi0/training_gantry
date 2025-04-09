@@ -49,6 +49,7 @@ Timer msg_timer;
 CAN can(PD_0, PD_1, 1000000);
 CANMessage   rxMsg1;
 int32_t pressure_raw[8];
+int32_t temperature_raw[8];
 int32_t tof_1[8];
 
 void unpack_reply(CANMessage msg){
@@ -82,6 +83,27 @@ void unpack_reply(CANMessage msg){
         tof_1[2] = msg.data[2];
         tof_1[3] = msg.data[3];
         tof_1[4] = msg.data[4];
+    }
+
+    // temperature
+    else if (msg.id == 10){
+        temperature_raw[0] = p_raw_1;
+        temperature_raw[1] = p_raw_2;
+    }
+
+    else if (msg.id == 11){
+        temperature_raw[2] = p_raw_1;
+        temperature_raw[3] = p_raw_2;
+    }
+
+    else if (msg.id == 12){
+        temperature_raw[4] = p_raw_1;
+        temperature_raw[5] = p_raw_2;
+    }
+
+    else if (msg.id == 13){
+        temperature_raw[6] = p_raw_1;
+        temperature_raw[7] = p_raw_2;
     }
 }
 
@@ -239,6 +261,7 @@ struct bmp3_data sn_data7;
 struct bmp3_data sn_data8;
 // Store sensor output data (pressures)
 int pr_data[8];
+int tp_data[8];
 // Configure data from sensor
 uint8_t sensor_comp = uint8_t(1)| uint8_t(1<<1); // sensor_comp = BMP3_PRESS | BMP3_TEMP;
     
@@ -484,11 +507,29 @@ int main()
             pr_data[5] = pressure_raw[5];
             pr_data[6] = pressure_raw[6];
             pr_data[7] = pressure_raw[7];      
-            sprintf(send_buf, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", msg_timer.read(),ft_data[0],ft_data[1],ft_data[2], pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7], tof_1[0], tof_1[1], tof_1[2], tof_1[3], tof_1[4]);       
+            tp_data[0] = temperature_raw[0]; // temperature is returned in C
+            tp_data[1] = temperature_raw[1];
+            tp_data[2] = temperature_raw[2];
+            tp_data[3] = temperature_raw[3];
+            tp_data[4] = temperature_raw[4];
+            tp_data[5] = temperature_raw[5];
+            tp_data[6] = temperature_raw[6];
+            tp_data[7] = temperature_raw[7];  
+            sprintf(send_buf, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", msg_timer.read(),ft_data[0],ft_data[1],ft_data[2], 
+                                                                                                        pr_data[0],pr_data[1],pr_data[2],pr_data[3],pr_data[4],pr_data[5],pr_data[6],pr_data[7], 
+                                                                                                        tof_1[0], tof_1[1], tof_1[2], tof_1[3], tof_1[4], 
+                                                                                                        tp_data[0],tp_data[1],tp_data[2],tp_data[3],tp_data[4],tp_data[5],tp_data[6],tp_data[7]);       
             server.sendto(client, send_buf, sizeof(send_buf)); // send message, look for '\n' character when decoding the string
         }
         can.read(rxMsg1);
-        //pc.printf("check");
+        unpack_reply(rxMsg1);
+        can.read(rxMsg1);
+        unpack_reply(rxMsg1);
+        can.read(rxMsg1);
+        unpack_reply(rxMsg1);
+        can.read(rxMsg1);
+        unpack_reply(rxMsg1);
+        can.read(rxMsg1);
         unpack_reply(rxMsg1);
         can.read(rxMsg1);
         unpack_reply(rxMsg1);
